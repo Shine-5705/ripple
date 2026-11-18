@@ -1,0 +1,15 @@
+[project]
+name = "ripple-graph"
+version = "0.1.0"
+description = "Git co-change context for coding agents, stored in a Relate graph"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.9"
+dependencies = ["relate-db"]
+[project.scripts]
+ripple = "ripple.cli:main"
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+[tool.setuptools]
+packages = ["ripple"]

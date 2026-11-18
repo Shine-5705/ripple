@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ripple — change context for coding agents, on Relate</title>
+<meta name="description" content="Ripple turns git history into a Relate graph so coding agents know what else usually changes, who knows the code, and what they forgot.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0b;--panel:#111113;--line:#1f1f23;--line2:#2a2a30;--tx:#ededef;--mut:#8b8b93;--dim:#5c5c66;--acc:#7c8cff;--acc2:#4fd1c5;--warn:#f5a524}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.55 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}code,.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12.5px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+nav{position:sticky;top:0;z-index:5;background:rgba(10,10,11,.8);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:24px;height:56px}.logo{display:flex;gap:9px;align-items:center;font-weight:600}
+.logo i{width:18px;height:18px;border-radius:50%;border:2px solid var(--acc);box-shadow:0 0 0 4px rgba(124,140,255,.18)}
+nav .links{margin-left:auto;display:flex;gap:20px;color:var(--mut)}nav .links a{text-decoration:none}nav .links a:hover{color:var(--tx)}
+.hero{padding:88px 0 40px}.eyebrow{display:inline-flex;gap:8px;align-items:center;color:var(--mut);border:1px solid var(--line2);border-radius:99px;padding:4px 12px;font-size:12.5px}
+.eyebrow b{width:6px;height:6px;border-radius:50%;background:var(--acc2)}
+h1{font-size:54px;line-height:1.05;letter-spacing:-.035em;margin:20px 0 16px;font-weight:600;max-width:820px}
+h1 span{background:linear-gradient(90deg,#fff,#a5adff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:18px;color:var(--mut);max-width:660px}
+.cta{display:flex;gap:12px;margin-top:28px;flex-wrap:wrap}.btn{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 16px;border-radius:8px;border:1px solid var(--line2);text-decoration:none;font-weight:500}
+.btn.p{background:var(--tx);color:#000;border-color:var(--tx)}.btn:hover{border-color:#444}
+.term{margin-top:36px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;overflow:auto}
+.term pre{margin:0;color:#c9c9d1;font-family:"JetBrains Mono",monospace;font-size:12.5px;line-height:1.7}.term .c{color:var(--dim)}.term .g{color:var(--acc2)}.term .w{color:var(--warn)}
+section{padding:56px 0;border-top:1px solid var(--line)}h2{font-size:28px;letter-spacing:-.02em;margin:0 0 8px;font-weight:600}.sub{color:var(--mut);margin:0 0 28px;max-width:680px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.grid3>div{background:var(--bg);padding:22px}.grid3 h3{margin:0 0 6px;font-size:15px;font-weight:600}.grid3 p{margin:0;color:var(--mut)}
+.app{display:grid;grid-template-columns:260px 1fr 340px;height:640px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
+.side{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}.side input{margin:12px;height:34px;border-radius:7px;border:1px solid var(--line2);background:var(--bg);color:var(--tx);padding:0 10px;font:inherit}
+.list{overflow:auto;flex:1}.item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 14px;line-height:1.3;cursor:pointer;color:var(--mut);font-family:"JetBrains Mono",monospace;font-size:12px}
+.item:hover{background:#17171a;color:var(--tx)}.item.on{background:#1a1b2e;color:#fff}.item span:last-child{color:var(--dim)}
+.item .ck{accent-color:var(--acc)}
+.stage{position:relative;min-width:0}canvas{width:100%;height:100%;display:block}
+.legend{position:absolute;left:12px;bottom:10px;color:var(--dim);font-size:12px}
+.panel{border-left:1px solid var(--line);overflow:auto;padding:16px}.panel h4{margin:18px 0 8px;font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);font-weight:500}
+.ptitle{font-family:"JetBrains Mono",monospace;font-size:13px;word-break:break-all}.meta{color:var(--mut);font-size:12.5px;margin-top:4px}
+.row{display:grid;grid-template-columns:44px 1fr;gap:8px;align-items:center;padding:4px 0;font-size:12.5px}.bar{height:4px;background:var(--line2);border-radius:2px;margin-top:3px}.bar i{display:block;height:100%;background:var(--acc);border-radius:2px}
+.row .p{font-family:"JetBrains Mono",monospace;font-size:12px;cursor:pointer;word-break:break-all}.row .p:hover{color:var(--acc)}
+.c2{display:flex;justify-content:space-between;padding:4px 0;font-size:12.5px;color:var(--mut)}.c2 b{color:var(--tx);font-weight:500}
+.miss{border:1px solid rgba(245,165,36,.35);background:rgba(245,165,36,.06);border-radius:8px;padding:10px 12px;margin:6px 0;font-size:12.5px}
+.ok{border:1px solid rgba(79,209,197,.35);background:rgba(79,209,197,.06);border-radius:8px;padding:10px 12px;font-size:12.5px}
+.tabs{display:flex;gap:4px;margin-bottom:6px}.tab{padding:5px 10px;border-radius:6px;color:var(--mut);cursor:pointer;font-size:12.5px;border:1px solid transparent}.tab.on{color:var(--tx);border-color:var(--line2);background:var(--bg)}
+.prov{margin-top:12px;color:var(--dim);font-size:12.5px}
+.steps{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.steps .term{margin:0}
+footer{border-top:1px solid var(--line);padding:28px 0;color:var(--dim);font-size:12.5px}
+@media(max-width:980px){h1{font-size:38px}.app{grid-template-columns:1fr;height:auto}.side{height:260px;border-right:0;border-bottom:1px solid var(--line)}.stage{height:360px}.panel{border-left:0;border-top:1px solid var(--line)}.grid3,.steps{grid-template-columns:1fr}nav .links a:not(:last-child){display:none}}
+</style></head><body>
+<nav><div class="wrap"><div class="logo"><i></i>Ripple</div><div class="links"><a href="#explorer">Explorer</a><a href="#how">How it works</a><a href="#agents">For agents</a><a href="https://github.com/Shine-5705/ripple">GitHub</a></div></div></nav>
+<header class="hero wrap">
+<div class="eyebrow"><b></b>Built on Relate — the embedded graph database by Neo4j</div>
+<h1><span>Know what else changes</span> before your agent opens the PR.</h1>
+<p class="lead">Ripple turns a repository's git history into a Relate graph of commits, files and people. Coding agents ask it what usually changes together, who knows a file, and which coupled files are missing from a change — in one local command, no server.</p>
+<div class="cta"><a class="btn p" href="#explorer">Open the explorer</a><a class="btn" href="https://github.com/Shine-5705/ripple">pip install from GitHub →</a></div>
+<div class="term"><pre><span class="c">$ ripple ingest .</span>
+ingested 3817 commits, 561 files, 857 authors, 3836 co-change edges into .ripple.rl in 1.26s
+<span class="c">$ ripple check src/flask/json/provider.py src/flask/app.py</span>
+<span class="w">  ? src/flask/blueprints.py</span>  — changed with src/flask/json/provider.py in 50% of its commits (6×)
+<span class="w">  ? src/flask/helpers.py</span>  — changed with src/flask/json/provider.py in 50% of its commits (6×)
+<span class="w">  ? CHANGES.rst</span>  — changed with src/flask/json/provider.py in 50% of its commits (6×)</pre></div>
+</header>
+
+<section id="explorer"><div class="wrap">
+<h2>Explore a real repository</h2>
+<p class="sub">Every number below comes from the full git history of <a href="https://github.com/pallets/flask">pallets/flask</a>, loaded into a Relate store with <code>ripple ingest</code> and exported with <code>ripple export</code>. Pick a file to see its context, or tick several to check a change set.</p>
+<div class="app">
+ <div class="side"><input id="q" placeholder="Filter files…" autocomplete="off"><div class="list" id="list"></div></div>
+ <div class="stage"><canvas id="cv"></canvas><div class="legend">Node size = commits · edge = changed together ≥3×</div></div>
+ <div class="panel" id="panel"></div>
+</div>
+<p class="prov" id="prov"></p>
+</div></section>
+
+<section id="how"><div class="wrap">
+<h2>How it works</h2><p class="sub">One graph file, three kinds of nodes, and relationships an agent can traverse in-process.</p>
+<div class="grid3">
+<div><h3>1 · Ingest</h3><p><code>git log --numstat</code> becomes <code>(:Commit)-[:TOUCHED]-&gt;(:File)</code> and <code>(:Commit)-[:AUTHORED_BY]-&gt;(:Author)</code>, written with batched Cypher <code>UNWIND … MERGE</code> into a single <code>.ripple.rl</code> store.</p></div>
+<div><h3>2 · Relate</h3><p>A Cypher pass materialises <code>[:CO_CHANGES {n, conf_ab, conf_ba}]</code> between files, with directional confidence: how often B changed when A did. Bulk commits (&gt;40 files) are skipped as noise.</p></div>
+<div><h3>3 · Ask</h3><p><code>context</code>, <code>check</code> and <code>hotspots</code> are graph traversals. Output is plain text for people and <code>--json</code> for agents, and <code>check --strict</code> works as a pre-commit hook or CI gate.</p></div>
+</div></div></section>
+
+<section id="agents"><div class="wrap">
+<h2>Made for coding agents</h2><p class="sub">Drop the bundled skill into Claude Code, Cursor or Codex and the agent calls Ripple before editing and before committing. Because the store is a single file, every agent on the machine shares the same context.</p>
+<div class="steps">
+<div class="term"><pre><span class="c"># before editing</span>
+$ ripple --json context src/flask/sessions.py -k 3
+{"path":"src/flask/sessions.py","changes":33,
+ "co_changes":[{"path":"CHANGES.rst","together":19,"confidence":0.576},
+   {"path":"src/flask/app.py","together":16,"confidence":0.485}, …],
+ "experts":[{"author":"David Lord","commits":26}, …]}</pre></div>
+<div class="term"><pre><span class="c"># before committing (.git/hooks/pre-commit)</span>
+ripple check --staged --strict || {
+  echo "Ripple: coupled files missing — review above"; exit 1; }
+<span class="c"># or query the graph directly</span>
+$ relate -d .ripple.rl "MATCH (f:File)-[r:CO_CHANGES]-(o) <span class="g">RETURN</span> …"</pre></div>
+</div></div></section>
+<footer><div class="wrap">Ripple · Apache-2.0 · Built for the Relate by Neo4j Hackathon · Explorer data: pallets/flask public git history (BSD-3-Clause project), no synthetic numbers.</div></footer>
+<script>
+const $=s=>document.querySelector(s);let D,N=[],E=[],byPath={},adj={},sel=null,picked=new Set();
+const fmt=t=>t?new Date(t*1000).toISOString().slice(0,10):'-';
+fetch('flask.json').then(r=>r.json()).then(d=>{D=d;init()});
+function init(){
+ $('#prov').textContent=`Snapshot: ${D.repo} @ ${D.head} — ${D.stats.commits.toLocaleString()} commits, ${D.stats.files} files, ${D.stats.authors} authors, ${D.stats.co_change_edges.toLocaleString()} co-change edges in the Relate store; top ${D.files.length} live files shown. Exported ${fmt(D.generated_at)}.`;
+ const W=600,H=600;D.files.forEach((f,i)=>{const a=i*2.399,r=12*Math.sqrt(i+1);const n={...f,x:W/2+r*Math.cos(a),y:H/2+r*Math.sin(a),vx:0,vy:0,r:2.5+Math.sqrt(f.changes)/1.6};N.push(n);byPath[f.path]=n;adj[f.path]=[]});
+ D.edges.forEach(e=>{const s=byPath[e.a],t=byPath[e.b];if(!s||!t)return;const o={s,t,n:e.n,ab:e.ab,ba:e.ba};E.push(o);adj[e.a].push({o:e.b,n:e.n,conf:e.ab});adj[e.b].push({o:e.a,n:e.n,conf:e.ba})});
+ for(const k in adj)adj[k].sort((x,y)=>y.conf-x.conf||y.n-x.n);
+ renderList();select('src/flask/sessions.py');tick();
+ $('#q').oninput=renderList;
+}
+function renderList(){const q=$('#q').value.toLowerCase();$('#list').innerHTML=D.files.filter(f=>f.path.toLowerCase().includes(q)).map(f=>`<div class="item ${f.path==sel?'on':''}" data-p="${f.path}"><label style="display:flex;gap:8px;align-items:center;min-width:0"><input type="checkbox" class="ck" ${picked.has(f.path)?'checked':''}><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.path}</span></label><span>${f.changes}</span></div>`).join('');
+ document.querySelectorAll('.item').forEach(el=>{el.querySelector('.ck').onclick=ev=>{ev.stopPropagation();const p=el.dataset.p;picked.has(p)?picked.delete(p):picked.add(p);mode='check';panel()};el.onclick=()=>select(el.dataset.p)})}
+let mode='context';
+function select(p){sel=p;mode='context';renderList();panel()}
+function check(ch,mc=.5,mt=3){const seen=new Set,out=[];ch.forEach(p=>(adj[p]||[]).forEach(x=>{if(!ch.includes(x.o)&&x.conf>=mc&&x.n>=mt)out.push({m:x.o,b:p,n:x.n,c:x.conf})}));out.sort((a,b)=>b.c-a.c||b.n-a.n);return out.filter(x=>!seen.has(x.m)&&seen.add(x.m))}
+function panel(){const tabs=`<div class="tabs"><div class="tab ${mode=='context'?'on':''}" onclick="mode='context';panel()">File context</div><div class="tab ${mode=='check'?'on':''}" onclick="mode='check';panel()">Change-set check${picked.size?` (${picked.size})`:''}</div></div>`;
+ if(mode=='check'){const ch=[...picked];let h=tabs;if(!ch.length)h+=`<p class="meta">Tick files in the list to build a change set. Ripple flags files that changed with them in ≥50% of their commits (≥3 times) but are not in the set.</p>`;else{h+=`<h4>Change set</h4>`+ch.map(p=>`<div class="mono" style="padding:2px 0">${p}</div>`).join('');const r=check(ch);h+=`<h4>Possibly missing</h4>`+(r.length?r.map(x=>`<div class="miss"><div class="mono">${x.m}</div><div class="meta">changed with ${x.b} in ${(x.c*100).toFixed(0)}% of its commits (${x.n}×)</div></div>`).join(''):`<div class="ok">Nothing historically coupled is missing.</div>`)}$('#panel').innerHTML=h;return}
+ const f=byPath[sel],d=D.detail[sel]||{experts:[],recent:[]};const co=(adj[sel]||[]).slice(0,10);
+ $('#panel').innerHTML=tabs+`<div class="ptitle">${sel}</div><div class="meta">${f.changes} commits · last changed ${fmt(f.last_ts)}</div>
+ <h4>Usually changes with</h4>${co.length?co.map(x=>`<div class="row"><div class="mono">${(x.conf*100).toFixed(0)}%</div><div><div class="p" onclick="select('${x.o}')">${x.o}</div><div class="bar"><i style="width:${x.conf*100}%"></i></div></div></div>`).join(''):'<p class="meta">No file changed with it ≥3 times.</p>'}
+ <h4>People who know it</h4>${d.experts.map(x=>`<div class="c2"><b>${x.author}</b><span>${x.commits} commits · ${fmt(x.last_ts)}</span></div>`).join('')}
+ <h4>Recent commits</h4>${d.recent.map(x=>`<div style="padding:4px 0;font-size:12.5px"><span class="mono" style="color:var(--dim)">${x.sha.slice(0,8)}</span> ${x.msg.replace(/</g,'&lt;')}<div class="meta">${fmt(x.ts)}</div></div>`).join('')}`}
+const cv=$('#cv'),cx=cv.getContext('2d');let it=0,view={k:1,x:0,y:0};
+function tick(){const W=cv.clientWidth,H=cv.clientHeight,dpr=devicePixelRatio||1;if(cv.width!=W*dpr){cv.width=W*dpr;cv.height=H*dpr}
+ if(it<400){it++;const cxm=W/2,cym=H/2;for(const a of N){a.vx+=(cxm-a.x)*.002;a.vy+=(cym-a.y)*.002}
+  for(let i=0;i<N.length;i++)for(let j=i+1;j<N.length;j++){const a=N[i],b=N[j];let dx=a.x-b.x,dy=a.y-b.y,d2=dx*dx+dy*dy+.01;if(d2>40000)continue;const f=120/d2;a.vx+=dx*f;a.vy+=dy*f;b.vx-=dx*f;b.vy-=dy*f}
+  for(const e of E){const dx=e.t.x-e.s.x,dy=e.t.y-e.s.y,d=Math.hypot(dx,dy)||1,f=(d-60)*.0016*Math.min(e.n,10)/10;e.s.vx+=dx/d*f*d*.02;e.s.vy+=dy/d*f*d*.02;e.t.vx-=dx/d*f*d*.02;e.t.vy-=dy/d*f*d*.02}
+  for(const a of N){a.vx*=.82;a.vy*=.82;a.x+=a.vx;a.y+=a.vy;a.x=Math.max(10,Math.min(W-10,a.x));a.y=Math.max(10,Math.min(H-10,a.y))}}
+ cx.setTransform(dpr,0,0,dpr,0,0);cx.clearRect(0,0,W,H);const nb=new Set((adj[sel]||[]).map(x=>x.o));const hl=mode=='check'?new Set([...picked,...check([...picked]).map(x=>x.m)]):new Set([sel,...nb]);
+ for(const e of E){const on=hl.has(e.s.path)&&hl.has(e.t.path)&&(mode=='check'||e.s.path==sel||e.t.path==sel);cx.strokeStyle=on?'rgba(124,140,255,.75)':'rgba(255,255,255,.045)';cx.lineWidth=on?1.4:1;cx.beginPath();cx.moveTo(e.s.x,e.s.y);cx.lineTo(e.t.x,e.t.y);cx.stroke()}
+ const miss=mode=='check'?new Set(check([...picked]).map(x=>x.m)):new Set;
+ for(const a of N){const on=hl.has(a.path);cx.fillStyle=a.path==sel&&mode=='context'||picked.has(a.path)&&mode=='check'?'#fff':miss.has(a.path)?'#f5a524':on?'#7c8cff':'#34343c';cx.beginPath();cx.arc(a.x,a.y,a.r,0,7);cx.fill()}
+ cx.font='11px JetBrains Mono, monospace';cx.fillStyle='#c9c9d1';for(const a of N)if(hl.has(a.path)&&a.path){const s=a.path.split('/').pop();cx.fillText(s,a.x+a.r+4,a.y+3)}
+ requestAnimationFrame(tick)}
+cv.onclick=ev=>{const r=cv.getBoundingClientRect(),x=ev.clientX-r.left,y=ev.clientY-r.top;let best=null,bd=200;for(const a of N){const d=(a.x-x)**2+(a.y-y)**2;if(d<bd){bd=d;best=a}}if(best)select(best.path)};
+</script></body></html>
